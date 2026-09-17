@@ -1,0 +1,7 @@
+{
+  "name": "starlit-choices",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": { "dev": "vite --host 127.0.0.1", "build": "vite build" },
+  "devDependencies": { "vite": "^7.1.5" }
+}
