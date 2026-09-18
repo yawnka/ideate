@@ -24,6 +24,17 @@ const flags = new URLSearchParams(location.search);
  */
 export function votingEnabled() { return !flags.has('solo'); }
 
+/**
+ * Which of the three modes is running, for the home-page badge.
+ * 'solo' reads as an ordinary book; otherwise the audience votes, either
+ * from real phones or — with no vote API, or a forced ?demo — a simulated
+ * room so rehearsals work without anyone present.
+ */
+export function currentMode() {
+  if (!votingEnabled()) return 'solo';
+  return voteBackendName() === 'stub' ? 'demo' : 'live';
+}
+
 // Which audience is counted. Real phones wherever the vote API answers, a
 // simulated room otherwise, so `npm run dev` and rehearsals work unchanged.
 //
@@ -43,7 +54,10 @@ export function votingEnabled() { return !flags.has('solo'); }
   fetch('/api/round?room=__probe', { cache: 'no-store' })
     .then(res => res.json())
     .then(data => { if (!('round' in data)) throw new Error('no api'); })
-    .catch(() => setVoteBackend('stub'));
+    .catch(() => setVoteBackend('stub'))
+    // The probe is async, so anything already showing the mode (the home
+    // page badge) needs telling once the answer is in.
+    .finally(() => document.dispatchEvent(new CustomEvent('starlit-mode')));
 })();
 
 let active = null;   // the in-flight round, if any
