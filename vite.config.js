@@ -42,9 +42,10 @@ function characterPortraits() {
 
 export default defineConfig({
   plugins: [characterPortraits()],
-  // Pinned so the dev server does not land on a port another project is
-  // already using; the QR code encodes this origin for the audience.
-  server: { port: 5180, strictPort: true },
+  // Vite's default port. strictPort makes a clash fail loudly rather than
+  // silently moving to the next free one — the vote QR encodes whatever
+  // origin the page is served from, so a surprise port is worth knowing about.
+  server: { port: 5173, strictPort: true },
   // Two entry points: the reader and the phone vote page. Building
   // `vote/index.html` as a real file (rather than relying on an SPA
   // fallback) means /vote/ resolves the same way in dev, in the production
