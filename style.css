@@ -111,3 +111,11 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
    the label can never disagree with the choice UI below it. */
 .reader-tools [data-present]{margin-right:14px;font:700 11px 'Space Mono';letter-spacing:.08em;opacity:.65}
 .reader-tools [data-present].presenting{opacity:1;color:var(--lime)}
+
+/* Book prose preserves paragraph breaks; the opening cast is readable at phone widths. */
+.scene-context,.ending-copy{white-space:pre-line}
+.intro-roles{margin:24px 0;text-align:left;border-top:1px solid rgba(255,255,255,.2)}
+.intro-roles>div{display:grid;grid-template-columns:105px 1fr;gap:14px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.12)}
+.intro-roles dt{font-weight:700;color:var(--accent)}
+.intro-roles dd{margin:0;font-size:14px;line-height:1.55;color:#e6deeb}
+@media(max-width:560px){.intro-roles>div{grid-template-columns:1fr;gap:4px}}

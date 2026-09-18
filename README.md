@@ -28,16 +28,16 @@ the real thing locally, see [Audience voting](#audience-voting).
 | # | Book | Genre | Scenes | Endings |
 |---|------|-------|--------|---------|
 | 01 | *Three After Midnight* | Office Romance · Love Triangle | 21 | 4 |
-| 02 | *The Best Friends Hangout* | Friends-to-Lovers · Beach Reunion | 31 | 3 |
+| 02 | *The Summer Between Us* | Friends-to-Lovers · Beach Reunion | 34 | 3 |
 | 03 | *Boyfriend for the Wedding* | Fake Dating · Second Chance | 11 | 3 |
 
-63 scenes and 10 endings in total, with explicit time and location transitions
+66 scenes and 10 endings in total, with explicit time and location transitions
 between beats. Fourteen fictional roles draw on members of BTS, BLACKPINK,
 Stray Kids, SEVENTEEN, ATEEZ, TWICE, NewJeans, and LE SSERAFIM.
 
 ## Included
 
-- Branching dialogue with chemistry meters, closing routes, and visible choice callbacks
+- Branching dialogue with chemistry meters, branching scenes, and visible choice callbacks
 - Audience voting from the room's phones, with live tallies and a manual fallback — see [Audience voting](#audience-voting)
 - Save and resume: one in-progress run per book, with a "Continue reading" strip on the home and library pages
 - Phone-message threads, simultaneous incoming calls, and animated choice confirmations
@@ -130,7 +130,9 @@ specific one. Initials appear until a folder has images.
 
 ## Working on the stories
 
-`src.js` holds the story data and the whole engine. The book data is built up in
+`src.js` holds the reader engine and Books 1 and 3. `book2.js` holds the current
+Book 2 story, routing rules, and character-specific endings. [Read the complete
+Book 2 script and choice guide](BOOK_2_STORY.md). The book data is built up in
 layers: an initial `stories` array followed by several `Object.assign` passes
 that replace earlier drafts. Only the final pass for each book is live, so the
 scene ids listed above (`d0`, `f0`, `w0` and their neighbours) are the ones that
@@ -142,3 +144,19 @@ before changing it.
 This is fan-made fiction. Character roles draw lightly from public-facing creative traits, performances, songs, and interviews. They do not claim to depict the artists’ private personalities or real relationships.
 
 The research basis included Weverse Magazine interviews with Jungkook, V, Mingyu, Joshua, Kazuha, and Yunjin; British Vogue's ATEEZ interview; Rolling Stone's BLACKPINK group profile; GQ Australia's Felix profile; and published coverage of San's acting work in *Imitation*.
+
+## Book 2 routing and verification
+
+All three romances stay open. Dinner picks two kitchen helpers only. At the
+party, each of the three friends is visited once, in the reader’s chosen order.
+Only the two highest chemistry scores trigger calls; the highest score across
+all three selects the confession. Ties use Jihyo, then Chan, then Joshua.
+The final response chooses kiss, slow burn, or friendship, each with personal
+prose for the confessing character (nine variations, three ending titles).
+
+Book 2 saves and local Admin edits are versioned. Pre-rewrite Book 2 progress
+is not resumed into this new scene structure; start a new run. New saves retain
+kitchen helpers and completed party visits. Other books keep their existing saves.
+
+Run `node --test tests/book2.test.mjs` for route, scoring, reader integration,
+and save/resume checks. Run `npm run build` for the production build.
