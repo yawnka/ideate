@@ -42,16 +42,6 @@ export function setVotingEnabled(on) {
   try { localStorage.setItem(VOTING_KEY, on ? 'on' : 'off'); } catch {}
 }
 
-/**
- * Which of the three modes is running, for the home-page badge.
- * 'solo' reads as an ordinary book; otherwise the audience votes, either
- * from real phones or — with no vote API, or a forced ?demo — a simulated
- * room so rehearsals work without anyone present.
- */
-export function currentMode() {
-  if (!votingEnabled()) return 'solo';
-  return voteBackendName() === 'stub' ? 'demo' : 'live';
-}
 
 // Which audience is counted. Real phones wherever the vote API answers, a
 // simulated room otherwise, so `npm run dev` and rehearsals work unchanged.
@@ -60,22 +50,23 @@ export function currentMode() {
 //   ?demo  force the simulated audience (rehearsing, or a dead network)
 //   ?live  force real voting (e.g. while testing against `wrangler dev`)
 (() => {
-  if (flags.has('demo')) return setVoteBackend('stub');
-  if (flags.has('live')) return setVoteBackend('live');
+  const announce = () => document.dispatchEvent(new CustomEvent('starlit-mode'));
+  if (flags.has('demo')) { setVoteBackend('stub'); return announce(); }
 
-  // Otherwise probe for the vote API itself rather than guessing from the
-  // hostname or port: it answers on the Worker (deployed or `wrangler dev`)
-  // and 404s through Vite's SPA fallback, which is exactly the distinction
-  // that matters. Optimistically start live so the first round is never
-  // stubbed, and drop back only if the probe says there is no API.
+  // Probe for the vote API rather than guessing from hostname or port: it
+  // answers on the Worker (deployed or `wrangler dev`) and returns Vite's
+  // HTML fallback otherwise, which is exactly the distinction that matters.
+  // Start live optimistically so the first round is never stubbed.
+  //
+  // The probe runs even for ?live: forcing the flag cannot conjure a backend,
+  // and claiming "live voting" where no vote can be received would be a lie
+  // the presenter only discovers with a room full of people.
   setVoteBackend('live');
   fetch('/api/round?room=__probe', { cache: 'no-store' })
     .then(res => res.json())
     .then(data => { if (!('round' in data)) throw new Error('no api'); })
     .catch(() => setVoteBackend('stub'))
-    // The probe is async, so anything already showing the mode (the home
-    // page badge) needs telling once the answer is in.
-    .finally(() => document.dispatchEvent(new CustomEvent('starlit-mode')));
+    .finally(announce);
 })();
 
 let active = null;   // the in-flight round, if any
