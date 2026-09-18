@@ -15,14 +15,22 @@ export const ROUND_SECONDS = 15;
 // for several seconds itself — two long pauses back to back is dead air.
 export const RESULT_HOLD_MS = 1800;
 
-// Real phone voting is the default wherever the vote API actually exists,
-// so nobody has to remember a URL flag on the night. The plain Vite dev
-// server has no /api/*, so it falls back to the stub automatically.
+const flags = new URLSearchParams(location.search);
+
+/**
+ * Whether choices are put to the room. On by default: this app exists to be
+ * presented, and an in-app toggle only created a state where the header said
+ * one thing while the screen did another. `?solo` reads it as a normal book.
+ */
+export function votingEnabled() { return !flags.has('solo'); }
+
+// Which audience is counted. Real phones wherever the vote API answers, a
+// simulated room otherwise, so `npm run dev` and rehearsals work unchanged.
 //
+//   ?solo  no voting at all — plain choice buttons
 //   ?demo  force the simulated audience (rehearsing, or a dead network)
 //   ?live  force real voting (e.g. while testing against `wrangler dev`)
 (() => {
-  const flags = new URLSearchParams(location.search);
   if (flags.has('demo')) return setVoteBackend('stub');
   if (flags.has('live')) return setVoteBackend('live');
 

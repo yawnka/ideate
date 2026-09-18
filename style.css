@@ -50,8 +50,6 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 @media(prefers-reduced-motion:reduce){.close,.modal-cancel{transition:none}}
 
 /* ---- Presentation mode: audience voting ---- */
-.reader-tools [data-present]{margin-right:14px;font:700 11px 'Space Mono';letter-spacing:.08em;opacity:.7}
-.reader-tools [data-present].presenting{opacity:1;color:var(--lime)}
 .vote-panel{border:1px solid #d9d0df;background:white;padding:18px}
 .vote-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;border-bottom:1px solid var(--line);padding-bottom:14px}
 .vote-eyebrow{font:700 10px 'Space Mono';letter-spacing:.18em;color:var(--pink)}
