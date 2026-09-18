@@ -40,4 +40,21 @@ function characterPortraits() {
   };
 }
 
-export default defineConfig({ plugins: [characterPortraits()] });
+export default defineConfig({
+  plugins: [characterPortraits()],
+  // Pinned so the dev server does not land on a port another project is
+  // already using; the QR code encodes this origin for the audience.
+  server: { port: 5180, strictPort: true },
+  // Two entry points: the reader and the phone vote page. Building
+  // `vote/index.html` as a real file (rather than relying on an SPA
+  // fallback) means /vote/ resolves the same way in dev, in the production
+  // build, and on Cloudflare's asset layer.
+  build: {
+    rollupOptions: {
+      input: {
+        main: path.resolve('index.html'),
+        vote: path.resolve('vote/index.html')
+      }
+    }
+  }
+});

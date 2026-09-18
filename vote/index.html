@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#201533" />
+    <meta name="robots" content="noindex" />
+    <title>Vote — Starlit Choices</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Instrument+Serif&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+      :root{--ink:#201533;--paper:#fbf7f0;--cream:#f3eadf;--pink:#ff6d91;--lime:#d8f26b;--line:rgba(32,21,51,.15)}
+      *{box-sizing:border-box}
+      html,body{margin:0}
+      body{
+        min-height:100svh;background:var(--ink);color:#fff;
+        font-family:'DM Sans',sans-serif;
+        padding:max(18px,env(safe-area-inset-top)) 18px max(18px,env(safe-area-inset-bottom));
+        display:flex;flex-direction:column;
+        -webkit-text-size-adjust:100%;
+      }
+      header{text-align:center;padding:6px 0 18px;flex:0 0 auto}
+      .brand{font:700 12px 'Space Mono';letter-spacing:.14em;color:var(--pink)}
+      h1{font:400 30px/1.1 'Instrument Serif';margin:10px 0 4px}
+      .sub{font:11px 'Space Mono';letter-spacing:.1em;color:#a99fb4;margin:0}
+      main{flex:1 1 auto;display:flex;flex-direction:column;justify-content:center;gap:12px}
+      button.opt{
+        display:grid;grid-template-columns:44px 1fr;align-items:center;gap:14px;
+        width:100%;min-height:76px;padding:16px 18px;text-align:left;
+        background:#fff;color:var(--ink);border:1px solid #fff;border-radius:2px;
+        font:600 17px/1.35 'DM Sans';cursor:pointer;
+        transition:transform .12s ease,box-shadow .12s ease;
+      }
+      button.opt b{
+        width:40px;height:40px;display:grid;place-items:center;
+        background:var(--cream);font:700 15px 'Space Mono';border-radius:2px
+      }
+      button.opt:active{transform:scale(.985)}
+      button.opt.picked{background:var(--lime);border-color:var(--lime);box-shadow:0 0 0 3px rgba(216,242,107,.35)}
+      button.opt.picked b{background:var(--ink);color:var(--lime)}
+      button.opt[disabled]{opacity:.5}
+      button.opt.picked[disabled]{opacity:1}
+      .state{text-align:center;font:12px 'Space Mono';letter-spacing:.08em;color:#a99fb4;min-height:20px;padding-top:6px}
+      .state.ok{color:var(--lime)}
+      .state.warn{color:var(--pink)}
+      .waiting{text-align:center;color:#a99fb4;padding:40px 10px}
+      .waiting .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--pink);animation:pulse 1.4s ease-in-out infinite}
+      @keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}
+      footer{flex:0 0 auto;text-align:center;font:9px 'Space Mono';letter-spacing:.12em;color:#6d6375;padding-top:16px}
+      @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="brand">✦ STARLIT CHOICES</div>
+      <h1 id="prompt">Joining the vote…</h1>
+      <p class="sub" id="round"></p>
+    </header>
+    <main id="options">
+      <div class="waiting"><span class="dot"></span><p>Waiting for the next choice…</p></div>
+    </main>
+    <div class="state" id="state"></div>
+    <footer>ONE VOTE PER PHONE · KEEP THIS PAGE OPEN</footer>
+
+    <script type="module">
+      // The phone-facing vote page. Deliberately standalone: no bundler, no
+      // imports from the main app, so it stays tiny on a phone over cellular.
+
+      const $ = id => document.getElementById(id);
+      const params = new URLSearchParams(location.search);
+
+      // A stable per-phone id so one device counts once per round, and a
+      // reload does not let someone vote twice.
+      const voterId = (() => {
+        const KEY = 'starlit-voter-id';
+        try {
+          let v = localStorage.getItem(KEY);
+          if (!v) { v = crypto.randomUUID(); localStorage.setItem(KEY, v); }
+          return v;
+        } catch {
+          // Private mode / blocked storage: fall back to a per-session id.
+          return crypto.randomUUID();
+        }
+      })();
+
+      // The room is the part after '#', set by the QR code. Falling back to
+      // ?room= keeps the link usable if someone retypes it.
+      const room = decodeURIComponent((location.hash || '').slice(1)) || params.get('room') || '';
+
+      let currentRound = null;
+      let myVote = null;
+      let failures = 0;
+
+      const setState = (msg, cls = '') => {
+        const el = $('state');
+        el.textContent = msg;
+        el.className = `state ${cls}`;
+      };
+
+      function renderWaiting() {
+        $('prompt').textContent = 'Waiting for the story…';
+        $('round').textContent = '';
+        $('options').innerHTML =
+          '<div class="waiting"><span class="dot"></span><p>The next choice will appear here.</p></div>';
+      }
+
+      function renderOptions(round) {
+        $('prompt').textContent = 'What should they do?';
+        $('round').textContent = round.chapter || '';
+        $('options').innerHTML = round.options
+          .map((label, i) =>
+            `<button class="opt" data-i="${i}"><b>${String.fromCharCode(65 + i)}</b><span></span></button>`
+          ).join('');
+        // Labels are set as text, never HTML, so story copy cannot inject markup.
+        [...document.querySelectorAll('.opt')].forEach((b, i) => {
+          b.querySelector('span').textContent = round.options[i];
+          b.onclick = () => castVote(i);
+        });
+      }
+
+      async function castVote(i) {
+        const buttons = [...document.querySelectorAll('.opt')];
+        buttons.forEach(b => {
+          b.disabled = true;
+          b.classList.toggle('picked', Number(b.dataset.i) === i);
+        });
+        myVote = i;
+        setState('Sending…');
+        try {
+          const res = await fetch('/api/vote', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ room, round: currentRound, option: i, voter: voterId })
+          });
+          if (!res.ok) throw new Error(res.status);
+          setState('Vote counted ✓', 'ok');
+          if (navigator.vibrate) navigator.vibrate(18);
+        } catch {
+          setState('Could not send — tap again', 'warn');
+          buttons.forEach(b => { b.disabled = false; b.classList.remove('picked'); });
+          myVote = null;
+        }
+      }
+
+      async function poll() {
+        try {
+          const res = await fetch(`/api/round?room=${encodeURIComponent(room)}`, { cache: 'no-store' });
+          if (!res.ok) throw new Error(res.status);
+          const data = await res.json();
+          failures = 0;
+
+          if (!data.round) {
+            if (currentRound !== null) { currentRound = null; myVote = null; renderWaiting(); setState(''); }
+            return;
+          }
+          // A new round id means a new question: re-enable the buttons.
+          if (data.round !== currentRound) {
+            currentRound = data.round;
+            myVote = null;
+            renderOptions(data);
+            setState(data.closed ? 'Voting closed' : 'Tap your choice');
+          }
+          if (data.closed && myVote === null) setState('Voting closed', 'warn');
+        } catch {
+          // Brief drops are normal on venue wifi; only complain if it persists.
+          if (++failures === 4) setState('Reconnecting…', 'warn');
+        }
+      }
+
+      if (!room) {
+        $('prompt').textContent = 'Scan the QR code';
+        setState('This link is missing its room code', 'warn');
+      } else {
+        renderWaiting();
+        poll();
+        setInterval(poll, 1500);
+        // Catch up immediately when a phone comes back from sleep.
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) poll(); });
+      }
+    </script>
+  </body>
+</html>

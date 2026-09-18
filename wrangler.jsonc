@@ -1,0 +1,26 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "starlit-choices",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-09-01",
+
+  // The built app is served straight from the asset layer. `run_worker_first`
+  // keeps /api/* flowing to the Worker while every other path resolves to a
+  // real file — /vote/ included, which is why the vote page is built as its
+  // own entry rather than relying on an SPA fallback.
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
+  },
+
+  "durable_objects": {
+    "bindings": [{ "name": "VOTES", "class_name": "VoteRoom" }]
+  },
+
+  // Declarative form (replaces the legacy `migrations` field). SQLite
+  // storage is required for Durable Objects on the free plan.
+  "exports": {
+    "VoteRoom": { "type": "durable-object", "storage": "sqlite" }
+  }
+}

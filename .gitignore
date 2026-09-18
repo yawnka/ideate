@@ -15,3 +15,6 @@ npm-debug.log*
 .DS_Store
 .idea/
 .vscode/
+
+# Wrangler local state (Durable Object data, dev cache)
+.wrangler/

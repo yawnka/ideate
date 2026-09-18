@@ -48,3 +48,56 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .modal-cancel{display:block;width:100%;margin-top:10px;padding:12px;background:none;border:1px solid var(--line);font:700 13px 'DM Sans';color:var(--ink);cursor:pointer;transition:border-color .15s ease,background .15s ease}
 .modal-cancel:hover,.modal-cancel:focus-visible{background:var(--cream);border-color:var(--ink)}
 @media(prefers-reduced-motion:reduce){.close,.modal-cancel{transition:none}}
+
+/* ---- Presentation mode: audience voting ---- */
+.reader-tools [data-present]{margin-right:14px;font:700 11px 'Space Mono';letter-spacing:.08em;opacity:.7}
+.reader-tools [data-present].presenting{opacity:1;color:var(--lime)}
+.vote-panel{border:1px solid #d9d0df;background:white;padding:18px}
+.vote-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;border-bottom:1px solid var(--line);padding-bottom:14px}
+.vote-eyebrow{font:700 10px 'Space Mono';letter-spacing:.18em;color:var(--pink)}
+.vote-head h3{font:30px 'Instrument Serif';margin:6px 0 0}
+.vote-timer{text-align:center;border:1px solid var(--ink);padding:8px 14px;min-width:78px;box-shadow:3px 3px 0 var(--ink)}
+.vote-timer span{display:block;font:700 28px 'Space Mono';line-height:1}
+.vote-timer small{font:9px 'Space Mono';letter-spacing:.14em;color:#6d6375}
+.vote-timer.urgent{background:var(--pink);color:#fff;border-color:var(--pink);box-shadow:3px 3px 0 var(--ink);animation:votePulse 1s ease-in-out infinite}
+.vote-timer.urgent small{color:#fff}
+@keyframes votePulse{50%{transform:scale(1.06)}}
+.vote-body{display:grid;grid-template-columns:200px 1fr;gap:26px;padding-top:18px}
+.vote-join{text-align:center}
+.vote-qr svg{display:block;width:100%;height:auto;border:1px solid var(--line)}
+.vote-url{font:10px 'Space Mono';color:#6d6375;word-break:break-all;margin:8px 0 4px}
+.vote-joined{font:11px 'Space Mono';color:#6d6375;margin:0}
+.vote-joined b{font-size:15px;color:var(--ink)}
+.vote-joined i{color:var(--pink);font-style:normal}
+.vote-bars{display:grid;gap:10px;align-content:start}
+.vote-row{display:grid;grid-template-columns:30px 1fr 44px;align-items:center;gap:12px}
+.vote-row b{width:30px;height:30px;display:grid;place-items:center;background:var(--cream);font:11px 'Space Mono'}
+.vote-label{display:block;font-size:14px;margin-bottom:5px}
+.vote-bar{display:block;height:11px;background:var(--cream);border:1px solid var(--line)}
+.vote-bar em{display:block;height:100%;background:var(--accent);transition:width .45s cubic-bezier(.25,.8,.3,1)}
+.vote-count{font:700 15px 'Space Mono';text-align:right}
+.vote-row.leading .vote-bar em{background:var(--pink)}
+.vote-row.won b{background:var(--ink);color:var(--lime)}
+.vote-row.won .vote-bar em{background:var(--lime)}
+.vote-row.won .vote-label{font-weight:700}
+.vote-locked{border-color:var(--ink);box-shadow:5px 5px 0 var(--lime)}
+.vote-offline .vote-joined:after{content:' · offline';color:var(--pink)}
+.vote-foot{display:flex;justify-content:space-between;gap:12px;border-top:1px solid var(--line);margin-top:16px;padding-top:12px}
+.vote-foot button{border:0;background:none;font:700 11px 'Space Mono';letter-spacing:.06em;color:#6d6375}
+.vote-foot button:hover{color:var(--ink)}
+.manual-tally .modal label{display:grid;grid-template-columns:1fr 90px;align-items:center;gap:12px;font:700 12px 'DM Sans'}
+.manual-tally .modal input{margin-top:0}
+@media(max-width:850px){.vote-body{grid-template-columns:1fr}.vote-join{display:grid;grid-template-columns:110px 1fr;gap:12px;align-items:center;text-align:left}.vote-url{grid-column:2;margin:0}.vote-joined{grid-column:2}}
+@media(prefers-reduced-motion:reduce){.vote-timer.urgent{animation:none}.vote-bar em{transition:none}}
+/* Voting opens before the clock runs, so the room has time to scan. */
+.vote-timer{opacity:.45;transition:opacity .3s ease}
+.vote-panel.vote-running .vote-timer{opacity:1}
+.vote-open-note{display:flex;align-items:center;gap:10px;margin-top:12px;padding:9px 12px;background:var(--cream);border-left:3px solid var(--pink);font:11px 'Space Mono';letter-spacing:.04em;color:#5b5067}
+.vote-panel.vote-running .vote-open-note,.vote-panel.vote-locked .vote-open-note{display:none}
+.vote-foot{flex-wrap:wrap;align-items:center}
+/* Scoped to .vote-foot so it outranks the plain-text button styling there,
+   which would otherwise repaint this solid button's label grey. */
+.vote-foot .vote-start{border:1px solid var(--ink);background:var(--ink);color:#fff;padding:11px 16px;font:700 11px 'Space Mono';letter-spacing:.08em;box-shadow:3px 3px 0 var(--pink);margin-right:auto}
+.vote-foot .vote-start:hover{background:#2d1f45;color:#fff}
+.vote-panel.vote-running .vote-start,.vote-panel.vote-locked .vote-start{display:none}
+@media(prefers-reduced-motion:reduce){.vote-timer{transition:none}}
