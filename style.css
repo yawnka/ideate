@@ -41,3 +41,10 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
  .resume-actions .primary{width:100%}
 }
 @media(prefers-reduced-motion:reduce){.resume-bar i{transition:none}}
+
+/* Modal dismissal: bigger close target, explicit cancel */
+.close{display:grid;place-items:center;width:44px;height:44px;right:8px;top:6px;line-height:1;color:var(--ink);opacity:.55;cursor:pointer;transition:opacity .15s ease}
+.close:hover,.close:focus-visible{opacity:1}
+.modal-cancel{display:block;width:100%;margin-top:10px;padding:12px;background:none;border:1px solid var(--line);font:700 13px 'DM Sans';color:var(--ink);cursor:pointer;transition:border-color .15s ease,background .15s ease}
+.modal-cancel:hover,.modal-cancel:focus-visible{background:var(--cream);border-color:var(--ink)}
+@media(prefers-reduced-motion:reduce){.close,.modal-cancel{transition:none}}
