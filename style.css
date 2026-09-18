@@ -121,3 +121,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .mode-solo{border-left:4px solid #6d6375}
 .mode-solo b{color:#6d6375}
 @media(max-width:560px){.mode-badge{margin:0 22px}}
+/* Reader toggle: audience voting on/off. Re-renders the scene on change, so
+   the label can never disagree with the choice UI below it. */
+.reader-tools [data-present]{margin-right:14px;font:700 11px 'Space Mono';letter-spacing:.08em;opacity:.65}
+.reader-tools [data-present].presenting{opacity:1;color:var(--lime)}

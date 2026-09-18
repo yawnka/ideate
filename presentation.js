@@ -17,12 +17,30 @@ export const RESULT_HOLD_MS = 1800;
 
 const flags = new URLSearchParams(location.search);
 
+const VOTING_KEY = 'starlit-voting';
+
 /**
- * Whether choices are put to the room. On by default: this app exists to be
- * presented, and an in-app toggle only created a state where the header said
- * one thing while the screen did another. `?solo` reads it as a normal book.
+ * Whether choices are put to the room. Defaults to ON — this app exists to
+ * be presented — and only turns off if explicitly asked, by `?solo` or by
+ * the in-reader toggle.
+ *
+ * A URL flag always wins over the stored preference, so `?solo` and `?live`
+ * are reliable regardless of what was toggled in a previous session.
  */
-export function votingEnabled() { return !flags.has('solo'); }
+export function votingEnabled() {
+  if (flags.has('solo')) return false;
+  if (flags.has('live')) return true;
+  try {
+    return localStorage.getItem(VOTING_KEY) !== 'off';
+  } catch {
+    return true; // blocked storage must not silently disable the vote
+  }
+}
+
+/** Flips voting on or off and remembers it for the next scene and reload. */
+export function setVotingEnabled(on) {
+  try { localStorage.setItem(VOTING_KEY, on ? 'on' : 'off'); } catch {}
+}
 
 /**
  * Which of the three modes is running, for the home-page badge.
