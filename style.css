@@ -101,3 +101,11 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .vote-foot .vote-start:hover{background:#2d1f45;color:#fff}
 .vote-panel.vote-running .vote-start,.vote-panel.vote-locked .vote-start{display:none}
 @media(prefers-reduced-motion:reduce){.vote-timer{transition:none}}
+/* The winning option, held on screen so the room can react to it. */
+.vote-result{margin-top:14px;padding:14px 16px;background:var(--ink);color:#fff;border-left:4px solid var(--lime);animation:resultIn .45s cubic-bezier(.2,.9,.3,1.2)}
+.vote-result small{display:block;font:700 10px 'Space Mono';letter-spacing:.2em;color:var(--lime)}
+.vote-result strong{display:block;margin-top:6px;font:400 25px/1.25 'Instrument Serif'}
+@keyframes resultIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.vote-panel.vote-locked .vote-row.won .vote-bar em{animation:wonPulse 1.1s ease-in-out 2}
+@keyframes wonPulse{50%{filter:brightness(1.25)}}
+@media(prefers-reduced-motion:reduce){.vote-result{animation:none}.vote-panel.vote-locked .vote-row.won .vote-bar em{animation:none}}

@@ -10,6 +10,11 @@ import { openRound, closeRound, getTally, getVoterCount, onUpdate, voteUrl, vote
 
 export const ROUND_SECONDS = 15;
 
+// How long the locked-in result stays on screen before the story moves on.
+// This is the payoff beat — the room needs time to see which option won and
+// react to it — so it is deliberately unhurried.
+export const RESULT_HOLD_MS = 5000;
+
 // Real phone voting is the default wherever the vote API actually exists,
 // so nobody has to remember a URL flag on the night. The plain Vite dev
 // server has no /api/*, so it falls back to the stub automatically.
@@ -84,6 +89,7 @@ export function votePanel(options, roundId, room) {
         </div>
         <div class="vote-bars">${bars}</div>
       </div>
+      <div class="vote-result" data-vote-result hidden></div>
       <div class="vote-foot">
         <button class="vote-start primary" data-vote-start>Start the ${ROUND_SECONDS}s countdown →</button>
         <button class="vote-skip" data-vote-skip>Close voting now</button>
@@ -175,13 +181,23 @@ export function runRound(roundId, options, onResolved, meta = {}) {
 
     rows.forEach((row, n) => row.classList.toggle('won', n === winner));
     root.classList.add('vote-locked');
+
+    // Announce the result, so the hold reads as a deliberate beat rather
+    // than the screen having frozen.
+    const banner = root.querySelector('[data-vote-result]');
+    if (banner) {
+      const label = options[winner][0][0];
+      banner.innerHTML = `<small>THE ROOM CHOSE</small><strong>${esc(label)}</strong>`;
+      banner.hidden = false;
+    }
+
     closeRound();
     unsubscribe?.();
     unsubscribe = null;
     active = null;
 
-    // Let the winning bar land before the story moves on.
-    setTimeout(() => onResolved(options[winner][1]), 1100);
+    // Hold the result so the room can see what won and react to it.
+    setTimeout(() => onResolved(options[winner][1]), RESULT_HOLD_MS);
   }
 
   root.querySelector('[data-vote-start]')?.addEventListener('click', startCountdown);
@@ -198,7 +214,12 @@ export function runRound(roundId, options, onResolved, meta = {}) {
       active = null;
       rows.forEach((row, n) => row.classList.toggle('won', n === index));
       root.classList.add('vote-locked');
-      setTimeout(() => onResolved(options[index][1]), 900);
+      const banner = root.querySelector('[data-vote-result]');
+      if (banner) {
+        banner.innerHTML = `<small>THE ROOM CHOSE</small><strong>${esc(options[index][0][0])}</strong>`;
+        banner.hidden = false;
+      }
+      setTimeout(() => onResolved(options[index][1]), RESULT_HOLD_MS);
     });
   });
 
