@@ -10,10 +10,10 @@ import { openRound, closeRound, getTally, getVoterCount, onUpdate, voteUrl, vote
 
 export const ROUND_SECONDS = 15;
 
-// How long the locked-in result stays on screen before the story moves on.
-// This is the payoff beat — the room needs time to see which option won and
-// react to it — so it is deliberately unhurried.
-export const RESULT_HOLD_MS = 5000;
+// How long the winning bar stays lit before the story's own consequence card
+// takes over. Kept short because that card is the real payoff beat and holds
+// for several seconds itself — two long pauses back to back is dead air.
+export const RESULT_HOLD_MS = 1800;
 
 // Real phone voting is the default wherever the vote API actually exists,
 // so nobody has to remember a URL flag on the night. The plain Vite dev
