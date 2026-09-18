@@ -121,12 +121,15 @@
 
       async function castVote(i) {
         const buttons = [...document.querySelectorAll('.opt')];
-        buttons.forEach(b => {
-          b.disabled = true;
-          b.classList.toggle('picked', Number(b.dataset.i) === i);
-        });
+        const previous = myVote;
+
+        // Buttons stay live while the round is open: the server keys votes on
+        // (round, voter), so re-tapping MOVES a vote rather than adding one.
+        // Only the in-flight button is briefly held, to avoid double-sends.
+        buttons.forEach(b => b.classList.toggle('picked', Number(b.dataset.i) === i));
         myVote = i;
-        setState('Sending…');
+        setState(previous === null ? 'Sending…' : 'Changing your vote…');
+
         try {
           const res = await fetch('/api/vote', {
             method: 'POST',
@@ -134,12 +137,14 @@
             body: JSON.stringify({ room, round: currentRound, option: i, voter: voterId })
           });
           if (!res.ok) throw new Error(res.status);
-          setState('Vote counted ✓', 'ok');
+          setState('Vote counted ✓ — tap again to change', 'ok');
           if (navigator.vibrate) navigator.vibrate(18);
         } catch {
+          // Put the highlight back where it was so the page never claims a
+          // vote the server did not take.
+          myVote = previous;
+          buttons.forEach(b => b.classList.toggle('picked', Number(b.dataset.i) === previous));
           setState('Could not send — tap again', 'warn');
-          buttons.forEach(b => { b.disabled = false; b.classList.remove('picked'); });
-          myVote = null;
         }
       }
 
@@ -154,14 +159,22 @@
             if (currentRound !== null) { currentRound = null; myVote = null; renderWaiting(); setState(''); }
             return;
           }
-          // A new round id means a new question: re-enable the buttons.
+          // A new round id means a new question: fresh buttons, no vote yet.
           if (data.round !== currentRound) {
             currentRound = data.round;
             myVote = null;
             renderOptions(data);
-            setState(data.closed ? 'Voting closed' : 'Tap your choice');
           }
-          if (data.closed && myVote === null) setState('Voting closed', 'warn');
+
+          // Voting stays tappable — and changeable — until the round closes.
+          const buttons = [...document.querySelectorAll('.opt')];
+          buttons.forEach(b => { b.disabled = !!data.closed; });
+
+          if (data.closed) {
+            setState(myVote === null ? 'Voting closed' : 'Voting closed — your vote is in', 'warn');
+          } else if (myVote === null) {
+            setState('Tap your choice');
+          }
         } catch {
           // Brief drops are normal on venue wifi; only complain if it persists.
           if (++failures === 4) setState('Reconnecting…', 'warn');
